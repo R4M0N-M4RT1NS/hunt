@@ -1,15 +1,37 @@
+import discord
+from discord.ext import commands
+from dotenv import load_dotenv
+import os
+from typing import Final
 import asyncpg
 
-def get_response():
-    print ("resposta")
+load_dotenv()
+DB_URL: Final[str] = os.getenv("DB_URL")
 
-async def register(member):
-    db_con = await asyncpg.connect('postgresql://Hunt_owner:npg_tegZoJX59Spl@ep-shiny-sky-acsw0qxp-pooler.sa-east-1.aws.neon.tech/Hunt?sslmode=require&channel_binding=require')
-    
-    await db_con.execute('''
-        INSERT INTO usuario(id, nome)
-        VALUES($1, $2)
-        ON CONFLICT (id) DO NOTHING
-    ''', member.id, member.name)
-    #ESSA PORRA CARREGA OS DADOS DE ID E NOME DE ENTRADA
-    #(NÃO SE PREOCUPE, OUTROS CAMPOS COMEÇAM EM NULO OU 0)
+class Perfil(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.command(name="p")
+    async def perfil(self, ctx):
+        user = ctx.author
+        user_id = user.id
+
+        db_con = await asyncpg.connect()
+
+        result = await db_con.fetchrow("SELECT karma FROM usuario WHERE id = $1", user_id)
+        await db_con.close()
+
+        karma = result["karma"] if result else 0
+
+        embed = discord.Embed(
+            title=f"👤 Perfil de {user.display_name}",
+            color=discord.Color.blue()
+        )
+        embed.set_thumbnail(url=user.avatar.url if user.avatar else user.default_avatar.url)
+        embed.add_field(name="Karma", value=f"🌀 {karma}", inline=False)
+
+        await ctx.send(embed=embed)
+
+async def setup(bot):
+    await bot.add_cog(Perfil(bot))
