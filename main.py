@@ -38,7 +38,8 @@ async def on_ban(guild, user):
 async def main():
     async with bot:
         await bot.load_extension("comandos.comandos")
-        print("✅ Comandos carregados")
+        # await bot.load_extension("interacao.encontros")
+        print("✅ Comandos e Eventos carregados")
         await bot.start(TOKEN)
 
 asyncio.run(main())
